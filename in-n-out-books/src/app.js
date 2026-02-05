@@ -11,6 +11,7 @@ const bcrypt = require('bcryptjs');
 const createError = require('http-errors');
 const { type } = require('os');
 const path = require('path');
+const { books, mangas, comics, digitalMedia } = require("../database/books");
 
 // Create an express application
 const app = express();
@@ -199,6 +200,152 @@ main a:hover {
 `; // end HTML content for the landing page
 
 res.send(html); // Send the HTML content to the client
+});
+
+app.get("/api/books", async (req, res, next) => {
+    try {
+        const allBooks = await books.find(); // Fetch all books from the database
+        console.log("All Books:", allBooks); // Log all books
+        res.send(allBooks); // Sends response with all books
+    } catch (err) {
+        console.error("Error:", err.message); // Logs error message
+        next(err); // Passes error to the next middleware
+    }
+});
+
+app.get("/api/books/:id", async (req, res, next) => {
+    try {
+        let {id} =req.params;
+        id = parseInt(id);
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+    }
+
+    const book = await books.findOne({ id: id }); // Fetch book by ID
+
+    console.log("Book:", book); // Log the fetched book
+    res.send(book); // Sends response with the fetched book
+    } catch (err) {
+        console.error("Error:", err.message); // Logs error message
+        next(err); // Passes error to the next middleware
+    }
+});
+
+app.get("/api/mangas", async (req, res, next) => {
+    try {
+        const allMangas = await mangas.find();
+        console.log("All Mangas:", allMangas);
+        res.send(allMangas);
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.get("/api/mangas/:id", async (req, res, next) => {
+    try {
+        let { id } = req.params;
+        id = parseInt(id);
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+        }
+
+        const manga = await mangas.findOne({ id: id });
+        console.log("Manga:", manga);
+        res.send(manga);
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.get("/api/comics", async (req, res, next) => {
+    try {
+        const allComics = await comics.find();
+        console.log("All Comics:", allComics);
+        res.send(allComics);
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.get("/api/comics/:id", async (req, res, next) => {
+    try {
+        let { id } = req.params;
+        id = parseInt(id);
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+        }
+
+        const comic = await comics.findOne({ id: id });
+        console.log("Comic:", comic);
+        res.send(comic);
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.get("/api/digital-media", async (req, res, next) => {
+    try {
+        const allDigitalMedia = await digitalMedia.find();
+        console.log("All Digital Media:", allDigitalMedia);
+        res.send(allDigitalMedia);
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.get("/api/digitalMedia", async (req, res, next) => {
+    try {
+        const allDigitalMedia = await digitalMedia.find();
+        console.log("All Digital Media:", allDigitalMedia);
+        res.send(allDigitalMedia);
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.get("/api/digital-media/:id", async (req, res, next) => {
+    try {
+        let { id } = req.params;
+        id = parseInt(id);
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+        }
+
+        const media = await digitalMedia.findOne({ id: id });
+        console.log("Digital Media:", media);
+        res.send(media);
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.get("/api/digitalMedia/:id", async (req, res, next) => {
+    try {
+        let { id } = req.params;
+        id = parseInt(id);
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+        }
+
+        const media = await digitalMedia.findOne({ id: id });
+        console.log("Digital Media:", media);
+        res.send(media);
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
 });
 
 // catch 404 and forward to error handler
