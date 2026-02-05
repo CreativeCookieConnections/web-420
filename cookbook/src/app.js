@@ -66,6 +66,38 @@ res.send(html); // Send the HTML content to the client
 
 });
 
+const recipes = require("../database/recipes"); // Import recipes database module
+
+app.get("/api/recipes", async (req, res, next) => {
+    try {
+        const allRecipes = await recipes.find(); // Fetch all recipes from the database
+        console.log("All Recipes:", allRecipes); // Log all recipes
+        res.send(allRecipes); // Sends response with all books
+    } catch (err) {
+        console.error("Error:", err.message); // Logs error message
+        next(err); // Passes error to the next middleware
+    }
+});
+
+app.get("/api/recipes/:id", async (req, res, next) => {
+    try {
+        let {id} =req.params;
+        id = parseInt(id);
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+    }
+
+    const recipe = await recipes.findOne({ id: id }); // Fetch recipe by ID
+
+    console.log("Recipe:", recipe); // Log the fetched recipe
+    res.send(recipe); // Sends response with the fetched recipe
+    } catch (err) {
+        console.error("Error:", err.message); // Logs error message
+        next(err); // Passes error to the next middleware
+    }
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     next(createError(404));
@@ -84,3 +116,4 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app; // Export the app for use in other files
+
