@@ -98,6 +98,45 @@ app.get("/api/recipes/:id", async (req, res, next) => {
     }
 });
 
+app.post("/api/recipes", async (req, res, next) => {
+    try {
+        const newRecipe = req.body; // Get new recipe data from request body
+
+        const expectedKeys = ["id", "name", "ingredients"];
+        const receivedKeys = Object.keys(newRecipe);
+
+        if(!receivedKeys.every(key =>expectedKeys.includes(key)) ||
+        receivedKeys.length !== expectedKeys.length) {
+            console.error("Bad Request: Missing keys or extra keys", receivedKeys); // Log error for bad request
+            return next(createError(400, "Bad Request")); // Send 400 error for bad request
+        }
+
+        const result = await recipes.insertOne(newRecipe); // Insert new recipe into the database
+        console.log("Result:", result); // Log the result of the insertion
+        res.status(201).send({id: result.ops[0].id}); // Send response with the ID of the newly created recipe
+    } catch (err) {
+        console.error("Error:", err.message); // Logs error message
+        next(err); // Passes error to the next middleware
+    }
+});
+
+// Delete a recipe by ID
+app.delete("/api/recipes/:id", async (req, res, next) => {
+    try {
+        const { id } = req.params; // Get recipe ID from request parameters
+        const result = await recipes.deleteOne({ id: parseInt(id) }); // Delete recipe from the database
+        console.log("Result:", result); // Log the result of the deletion
+        res.status(204).send(); // Send 204 No Content response
+    } catch (err) {
+        if (err.message === "No matching item found") {
+            return next(createError(404, "Recipe not found")); // Send 404 error if recipe is not found
+        }
+
+        console.error("Error:", err.message); // Logs error message
+        next(err); // Passes error to the next middleware
+    }
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     next(createError(404));
