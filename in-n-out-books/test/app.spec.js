@@ -93,6 +93,63 @@ describe("HandsOn 3.1: API Tests", () => {
       });
     });
 
+    // Adds a new book to the mock database and returns a 201 status code if successful.
+    it("should return a 201 status code when adding a new book, manga, comic, or digital media", async() => {
+      const res = await request(app)
+      .post("/api/books")
+      .send({
+        id: 99,
+        title: "New Book",
+        author: "Author Name"
+      });
+      const resManga = await request(app)
+      .post("/api/mangas")
+      .send({
+        id: 99,
+        title: "New Manga",
+        author: "Author Name"
+      });
+      const resComic = await request(app)
+      .post("/api/comics")
+      .send({
+        id: 99,
+        title: "New Comic",
+        author: "Author Name"
+      });
+      const resDigitalMedia = await request(app)
+      .post("/api/digitalMedia")
+      .send({
+        id: 99,
+        title: "New Digital Media",
+        author: "Author Name"
+      });
+
+      expect(res.statusCode).toEqual(201);
+    });
+
+    //Return 204 status code when deleting a book, manga, comic, or digital media by ID.
+    it("it should return a 204 status code when deleting a book, manga, comic, or digital media", async () => {
+      const res = await request(app).delete("/api/books/99");
+      const resManga = await request(app).delete("/api/mangas/99");
+      const resComic = await request(app).delete("/api/comics/99");
+      const resDigitalMedia = await request(app).delete("/api/digitalMedia/99");
+
+      expect(res.statusCode).toEqual(204);
+    });
+
+    // Return a 400 error if the book, manga, comic, or digital media ID is missing a title.
+
+    it("it should return a 400 error if the book, manga, comic, or digital media id is not a title", async () => {
+      const res = await request(app).get("/api/books/qux");
+      const resManga = await request(app).get("/api/mangas/qux");
+      const resComic = await request(app).get("/api/comics/qux");
+      const resDigitalMedia = await request(app).get("/api/digitalMedia/qux");
+      expect(res.statusCode).toEqual(400);
+      expect(resManga.statusCode).toEqual(400);
+      expect(resComic.statusCode).toEqual(400);
+      expect(resDigitalMedia.statusCode).toEqual(400);
+    });
+
     it("it should return a single digital media item", async () => {
       const res = await request(app).get("/api/digitalMedia/1");
       expect(res.statusCode).toEqual(200);

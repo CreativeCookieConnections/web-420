@@ -348,9 +348,154 @@ app.get("/api/digitalMedia/:id", async (req, res, next) => {
     }
 });
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-    next(createError(404));
+app.post("/api/books", async (req, res, next) => {
+    try {
+        const newItem = req.body; // Get new item data from request body
+
+        const expectedKeys = ["id", "title", "author"];
+        const receivedKeys = Object.keys(newItem);
+
+        if(!receivedKeys.every(key =>expectedKeys.includes(key)) ||
+        receivedKeys.length !== expectedKeys.length) {
+            console.error("Bad Request: Missing keys or extra keys", receivedKeys); // Log error for bad request
+            return next(createError(400, "Bad Request")); // Send 400 error for bad request
+        }
+
+        const result = await books.insertOne(newItem); 
+        console.log("Result:", result); // Log the result of the insertion
+        res.status(201).send({id: result.ops[0].id}); // Send response with the ID of the newly created item
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.post("/api/mangas", async (req, res, next) => {
+    try {
+        const newItem = req.body;
+
+        const expectedKeys = ["id", "title", "author"];
+        const receivedKeys = Object.keys(newItem);
+
+        if(!receivedKeys.every(key =>expectedKeys.includes(key)) ||
+        receivedKeys.length !== expectedKeys.length) {
+            console.error("Bad Request: Missing keys or extra keys", receivedKeys);
+            return next(createError(400, "Bad Request"));
+        }
+
+        const result = await mangas.insertOne(newItem);
+        console.log("Result:", result);
+        res.status(201).send({id: result.ops[0].id});
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.post("/api/comics", async (req, res, next) => {
+    try {
+        const newItem = req.body;
+
+        const expectedKeys = ["id", "title", "author"];
+        const receivedKeys = Object.keys(newItem);
+
+        if(!receivedKeys.every(key =>expectedKeys.includes(key)) ||
+        receivedKeys.length !== expectedKeys.length) {
+            console.error("Bad Request: Missing keys or extra keys", receivedKeys);
+            return next(createError(400, "Bad Request"));
+        }
+
+        const result = await comics.insertOne(newItem);
+        console.log("Result:", result);
+        res.status(201).send({id: result.ops[0].id});
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.post("/api/digitalMedia", async (req, res, next) => {
+    try {
+        const newItem = req.body;
+
+        const expectedKeys = ["id", "title", "author"];
+        const receivedKeys = Object.keys(newItem);
+        
+        if(!receivedKeys.every(key =>expectedKeys.includes(key)) ||
+        receivedKeys.length !== expectedKeys.length) {
+            console.error("Bad Request: Missing keys or extra keys", receivedKeys);
+            return next(createError(400, "Bad Request"));
+        }
+        
+        const result = await digitalMedia.insertOne(newItem);
+        console.log("Result:", result);
+        res.status(201).send({id: result.ops[0].id});
+    } catch (err) {
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+// Delete a book, manga, comic, or digital media by ID
+app.delete("/api/books/:id", async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await books.deleteOne({ id: parseInt(id) });
+        console.log("Result:", result);
+        res.status(204).send(); // Send 204 No Content status code
+    } catch (err) {
+        if (err.message === "No matching item found") {
+            return next(createError(404, "Book not found")); // Send 404 error if book is not found
+        }
+
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.delete("/api/mangas/:id", async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await mangas.deleteOne({ id: parseInt(id) });
+        console.log("Result:", result);
+        res.status(204).send();
+    } catch (err) {
+        if (err.message === "No matching item found") {
+            return next(createError(404, "Manga not found"));
+        }
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.delete("/api/comics/:id", async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await comics.deleteOne({ id: parseInt(id) });
+        console.log("Result:", result);
+        res.status(204).send();
+    } catch (err) {        
+        if (err.message === "No matching item found") {
+            return next(createError(404, "Comic not found"));
+        }
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.delete("/api/digitalMedia/:id", async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await digitalMedia.deleteOne({ id: parseInt(id) });
+        console.log("Result:", result);
+        res.status(204).send();
+    } catch (err) {
+        if (err.message === "No matching item found") {
+            return next(createError(404, "Digital media not found"));
+        }
+        console.error("Error:", err.message);
+        next(err);
+    }
 });
 
 // error handler
