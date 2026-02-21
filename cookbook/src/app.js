@@ -68,6 +68,8 @@ res.send(html); // Send the HTML content to the client
 
 const recipes = require("../database/recipes"); // Import recipes database module
 
+// API fetch, log, send response, logs error, and passes error to the next middleware
+
 app.get("/api/recipes", async (req, res, next) => {
     try {
         const allRecipes = await recipes.find(); // Fetch all recipes from the database
@@ -78,6 +80,8 @@ app.get("/api/recipes", async (req, res, next) => {
         next(err); // Passes error to the next middleware
     }
 });
+
+// Get single recipe by ID, log the recipe, send response, log error, and pass error to the next middleware
 
 app.get("/api/recipes/:id", async (req, res, next) => {
     try {
@@ -97,6 +101,8 @@ app.get("/api/recipes/:id", async (req, res, next) => {
         next(err); // Passes error to the next middleware
     }
 });
+
+// Add a new recipe, log the result, send response with the new recipe ID, log error, and pass error to the next middleware
 
 app.post("/api/recipes", async (req, res, next) => {
     try {
@@ -120,7 +126,7 @@ app.post("/api/recipes", async (req, res, next) => {
     }
 });
 
-// Delete a recipe by ID
+// Delete a recipe by ID, log the result, send response, log error, and pass error to the next middleware
 app.delete("/api/recipes/:id", async (req, res, next) => {
     try {
         const { id } = req.params; // Get recipe ID from request parameters
@@ -129,6 +135,40 @@ app.delete("/api/recipes/:id", async (req, res, next) => {
         res.status(204).send(); // Send 204 No Content response
     } catch (err) {
         if (err.message === "No matching item found") {
+            return next(createError(404, "Recipe not found")); // Send 404 error if recipe is not found
+        }
+
+        console.error("Error:", err.message); // Logs error message
+        next(err); // Passes error to the next middleware
+    }
+});
+
+// Return a 400 status code when adding a new recipe and input must be a number
+app.put("/api/recipes/:id", async (req, res, next) => {
+    try {
+        let {id} = req.params;
+        let recipe = req.body;
+        id = parseInt(id);
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number")); // Send 400 error if ID is not a number
+        }
+
+        const expectedKeys = ["name", "ingredients"];
+        const receivedKeys = Object.keys(recipe);
+
+        if(!receivedKeys.every(key => expectedKeys.includes(key)) ||
+    receivedKeys.length !== expectedKeys.length) {
+        console.error("Bad Request: Missing keys or extra keys", receivedKeys); // Log error for bad request
+        return next(createError(400, "Bad Request")); // Send 400 error for bad request
+    }
+
+        const result = await recipes.updateOne({ id: id }, recipe); // Update recipe in the database
+        console.log("Result:", result); // Log the result of the update
+        res.status(204).send(); // Send 204 No Content response
+    } catch (err) {
+        if (err.message === "No matching item found") {
+            console.log("Recipe not found", err.message); // Log error if recipe is not found
             return next(createError(404, "Recipe not found")); // Send 404 error if recipe is not found
         }
 
