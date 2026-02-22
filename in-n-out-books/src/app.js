@@ -498,6 +498,111 @@ app.delete("/api/digitalMedia/:id", async (req, res, next) => {
     }
 });
 
+// Update a book and return a 204- status code
+app.put("/api/books/:id", async (req, res, next) => {
+    try {
+        let { id } = req.params;
+        id = parseInt(id);
+        const updatedData = req.body;
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+        }
+
+        if (!updatedData.title) {
+            return next(createError(400, "Title is required"));
+        }
+
+        const result = await books.updateOne({ id: id }, updatedData);
+        console.log("Result:", result);
+        res.status(204).send(); // Send 204 No Content status code
+    } catch (err) {
+        if (err.message === "No matching item found to update") {
+            return next(createError(404, "Book not found")); // Send 404 error if book is not found
+        }
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.put("/api/mangas/:id", async (req, res, next) => {
+    try {
+        let { id } = req.params;
+        id = parseInt(id);
+        const updatedData = req.body;
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+        }
+
+        if (!updatedData.title) {
+            return next(createError(400, "Title is required"));
+        }
+
+        const result = await mangas.updateOne({ id: id }, updatedData);
+        console.log("Result:", result);
+        res.status(204).send(); // Send 204 No Content status code
+    } catch (err) {
+        if (err.message === "No matching item found to update") {
+            return next(createError(404, "Manga not found"));
+        }
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.put("/api/comics/:id", async (req, res, next) => {
+    try {
+        let { id } = req.params;
+        id = parseInt(id);
+        const updatedData = req.body;
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+        }
+
+        if (!updatedData.title) {
+            return next(createError(400, "Title is required"));
+        }
+
+        const result = await comics.updateOne({ id: id }, updatedData);
+        console.log("Result:", result);
+        res.status(204).send(); // Send 204 No Content status code
+    } catch (err) {
+        if (err.message === "No matching item found to update") {
+            return next(createError(404, "Comic not found"));
+        }
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+app.put("/api/digitalMedia/:id", async (req, res, next) => {
+    try {
+        let { id } = req.params;
+        id = parseInt(id);
+        const updatedData = req.body;
+
+        if (isNaN(id)) {
+            return next(createError(400, "Input must be a number"));
+        }
+
+        if (!updatedData.title) {
+            return next(createError(400, "Title is required"));
+        }
+
+        const result = await digitalMedia.updateOne({ id: id }, updatedData);
+        console.log("Result:", result);
+        res.status(204).send(); // Send 204 No Content status code
+    } catch (err) {
+        if (err.message === "No matching item found to update") {
+            return next(createError(404, "Digital media not found"));
+        }
+        console.error("Error:", err.message);
+        next(err);
+    }
+});
+
 // error handler
 app.use(function(err, req, res, next) {
     res.status(err.status || 500);
