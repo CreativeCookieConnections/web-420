@@ -9,6 +9,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const createError = require('http-errors');
 const { type } = require('os');
+const users = require("../database/users");
 
 const app = express(); // Creates an express application
 
@@ -64,6 +65,50 @@ main a:hover {color #EF5350; text-decoration: underline;}
 
 res.send(html); // Send the HTML content to the client
 
+});
+
+// Add validation to the POST endpoint that checks if the email address is already in use. If it is, generate a 409 error and pass it to our middleware handler
+app.post("/api/register", async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        const expectedKeys = ["email", "password"];
+        const receivedKeys = Object.keys(req.body);
+
+        if(!receivedKeys.every(key => expectedKeys.includes(key)) ||
+        receivedKeys.length !== expectedKeys.length) {
+            console.error("Bad Request: Missing keys or extra keys", receivedKeys); // Log error for bad request
+            return next(createError(400, "Bad Request")); // Send 400 error for bad request
+        }
+        
+        let duplicateUser;
+        try {
+            duplicateUser = await users.findOne({ email: email }); // Check if a user with the same email already exists
+        } catch (err) {
+            duplicateUser = null; // If an error occurs during the database query, treat it as if no duplicate user was found
+        }
+
+        if(duplicateUser) {
+            console.error("Conflict: User already exists"); // Log error for duplicate user
+            return next(createError(409, "Conflict")); // Send 409 error for duplicate user
+        }
+
+        const hashedPassword = bcrypt.hashSync(password, 10); // Hash the password using bcrypt with 10 salt rounds
+
+        console.log("email:", email); // Log the email address
+        console.log("password:", hashedPassword); // Log the hashed password
+
+        const user = await users.insertOne({
+            email: email,
+            password: hashedPassword
+        });
+
+        res.status(200).send({ user: user, message: "Registration successful" }); // Send response with user information and success message
+
+    } catch (err) {
+        console.error("Error:", err); // Log error message
+        console.error("Error:", err.message); // Log error message
+        next(err); // Passes error to the next middleware
+    }
 });
 
 const recipes = require("../database/recipes"); // Import recipes database module
@@ -142,6 +187,7 @@ app.delete("/api/recipes/:id", async (req, res, next) => {
         next(err); // Passes error to the next middleware
     }
 });
+
 
 // Return a 400 status code when adding a new recipe and input must be a number
 app.put("/api/recipes/:id", async (req, res, next) => {

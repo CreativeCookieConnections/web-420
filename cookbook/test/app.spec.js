@@ -56,6 +56,49 @@ describe("Chapter 3: API Tests", () => {
     expect(res.statusCode).toEqual(204);
   })
 
+  // Chapter 6: Securing API
+
+  // Check if 200 status code is returned with a message of "Registration successful" when registering a new user
+  it("should return a 200 status code with a message of 'Registration successful' when registering a new user", async () => {
+    const res = await request(app).post("/api/register").send({
+      email: "cedric@hogwarts.edu",
+      password: "diggory"
+    });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toEqual("Registration successful");
+    });
+
+  // Add a new unit test to check if a 409 status code is returned with the message "Conflict" when registering a user with a duplicate email address
+  it("should return a 409 status code with a message of 'Conflict' when registering a user with a duplicate email", async () => {
+    const res = await request(app).post("/api/register").send({
+      email: "cedric@hogwarts.edu",
+      password: "potter"
+    });
+
+    expect(res.statusCode).toEqual(409);
+    expect(res.body.message).toEqual("Conflict");
+  });
+
+  // Add a unit test to check if a status code of 400 is returned with a message of "Bad Request" when using too many or too few parameter values
+  it("should return a 400 status code when registering a new user with too many or too few parameter values", async () => {
+    const res = await request(app).post("/api/register").send({
+      email: "cedric@hogwarts.edu",
+      password: "diggory",
+      extraKey: "extra"
+    });
+
+    expect(res.statusCode).toEqual(400);
+    expect(res.body.message).toEqual("Bad Request");
+
+    const res2 = await request(app).post("/api/register").send({
+      email: "cedric@hogwarts.edu"
+    });
+
+    expect(res2.statusCode).toEqual(400);
+    expect(res2.body.message).toEqual("Bad Request");
+  });
+
   // Return 400 status code when if id is not a number
 
     it("it should return a 400 error if the id is not a number", async () => {
