@@ -16,6 +16,13 @@ const { books, mangas, comics, digitalMedia } = require("../database/books");
 // Create an express application
 const app = express();
 
+const mockUsers = [
+    {
+        email: "testuser@example.com",
+        password: bcrypt.hashSync("password123", 10)
+    }
+];
+
 // Middleware
 app.use(express.json()); // Middleware to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
@@ -200,6 +207,26 @@ main a:hover {
 `; // end HTML content for the landing page
 
 res.send(html); // Send the HTML content to the client
+});
+
+//A POST route at /api/login that logs a user in and returns 200 status code if successful authentication, a 400 error code if the request body is missing email or password, and a 401 error and a message of unauthorized if the password is invalid.
+app.post("/api/login", async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            throw createError(400, "Bad Request");
+        }
+
+        const user = mockUsers.find((mockUser) => mockUser.email === email);
+
+        if (!user || !bcrypt.compareSync(password, user.password)) {
+            throw createError(401, "Unauthorized");
+        }
+
+        res.status(200).send({ message: "Authentication successful" });
+    } catch (err) {
+        next(err);
+    }
 });
 
 app.get("/api/books", async (req, res, next) => {

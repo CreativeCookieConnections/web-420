@@ -143,6 +143,46 @@ describe("Chapter 5: API Tests", () => {
       expect(resDigitalMedia.statusCode).toEqual(204);
     });
 
+    // Chapter 6: Securing API - Implementing User Authentication
+
+    // Logs a user in and returns a 200-status code with 'Authentication successful' message.
+    it("should log a user in and return a 200 status code with 'Authentication successful' message", async () => {
+      const res = await request(app)
+        .post("/api/login")
+        .send({
+          email: "testuser@example.com",
+          password: "password123",
+        });
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.message).toEqual("Authentication successful");
+    });
+
+    // Return a 401 status code with 'Unauthorized' message when logging in with incorrect credentials.
+    it("should return a 401 status code with 'Unauthorized' message when logging in with incorrect credentials", async () => {
+      const res = await request(app)
+        .post("/api/login")
+        .send({
+          email: "testuser@example.com",
+          password: "wrongpassword",
+        });
+
+      expect(res.statusCode).toEqual(401);
+      expect(res.body.message).toEqual("Unauthorized");
+    });
+
+    // Return a 400 staus code with 'Bad Request' when missing email or password.
+    it("should return a 400 status code with 'Bad request' message when missing email or password", async () => {
+      const res = await request(app)
+        .post("/api/login")
+        .send({
+          email: "testuser@example.com",
+        });
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.message).toEqual("Bad Request");
+    });
+
     // Chapter 5: API Tests - Update a book, manga, comic, or digital media and return 204 Status Code, Return a 400 status code when using a non-numeric ID, and return a 400 status code when updating a book with a missing title.
 
     // Updates a book, manga, comic, or digital media by ID and returns a 204 status code if successful.
