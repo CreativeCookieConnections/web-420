@@ -9,6 +9,7 @@ Description: in-n-out-books app.
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const createError = require('http-errors');
+const Ajv = require('ajv');
 const { type } = require('os');
 const path = require('path');
 const { books, mangas, comics, digitalMedia } = require("../database/books");
@@ -19,9 +20,28 @@ const app = express();
 const mockUsers = [
     {
         email: "testuser@example.com",
-        password: bcrypt.hashSync("password123", 10)
+        password: bcrypt.hashSync("password123", 10),
+        securityQuestions: [
+            { answer: "Fluffy" },
+            { answer: "Pizza" }
+        ]
     }
 ];
+
+const ajv = new Ajv();
+const securityQuestionsSchema = {
+    type: "array",
+    items: {
+        type: "object",
+        properties: {
+            answer: { type: "string" }
+        },
+        required: ["answer"],
+        additionalProperties: false
+    }
+};
+
+const validateSecurityQuestions = ajv.compile(securityQuestionsSchema);
 
 // Middleware
 app.use(express.json()); // Middleware to parse JSON bodies
@@ -626,6 +646,33 @@ app.put("/api/digitalMedia/:id", async (req, res, next) => {
             return next(createError(404, "Digital media not found"));
         }
         console.error("Error:", err.message);
+        next(err);
+    }
+});
+
+// A POST route that verifies a user's security questions and returns a 200-status with 'Security questions successfully answered' message.
+app.post("/api/users/:email/verify-security-question", async (req, res, next) => {
+    try {
+        const isValid = validateSecurityQuestions(req.body);
+
+        if (!isValid) {
+            throw createError(400, "Bad Request");
+        }
+
+        const { email } = req.params;
+        const user = mockUsers.find((mockUser) => mockUser.email === email);
+
+        const answersMatch =
+            user &&
+            user.securityQuestions.length === req.body.length &&
+            user.securityQuestions.every((question, index) => question.answer === req.body[index].answer);
+
+        if (!answersMatch) {
+            throw createError(401, "Unauthorized");
+        }
+
+        res.status(200).send({ message: "Security questions successfully answered" });
+    } catch (err) {
         next(err);
     }
 });

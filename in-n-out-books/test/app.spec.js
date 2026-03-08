@@ -183,6 +183,43 @@ describe("Chapter 5: API Tests", () => {
         expect(res.body.message).toEqual("Bad Request");
     });
 
+    describe("POST /api/users/:email/verify-security-question", () => {
+      it("should return a 200 status with 'Security questions successfully answered' message", async () => {
+        const res = await request(app)
+          .post("/api/users/testuser@example.com/verify-security-question")
+          .send([
+            { answer: "Fluffy" },
+            { answer: "Pizza" }
+          ]);
+
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.message).toEqual("Security questions successfully answered");
+      });
+
+      it("should return a 400 status code with 'Bad Request' message when the request body fails ajv validation", async () => {
+        const res = await request(app)
+          .post("/api/users/testuser@example.com/verify-security-question")
+          .send([
+            { answer: "Fluffy", extra: "not-allowed" }
+          ]);
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.message).toEqual("Bad Request");
+      });
+
+      it("should return a 401 status code with 'Unauthorized' message when the security questions are incorrect", async () => {
+        const res = await request(app)
+          .post("/api/users/testuser@example.com/verify-security-question")
+          .send([
+            { answer: "Wrong" },
+            { answer: "Answer" }
+          ]);
+
+        expect(res.statusCode).toEqual(401);
+        expect(res.body.message).toEqual("Unauthorized");
+      });
+    });
+
     // Chapter 5: API Tests - Update a book, manga, comic, or digital media and return 204 Status Code, Return a 400 status code when using a non-numeric ID, and return a 400 status code when updating a book with a missing title.
 
     // Updates a book, manga, comic, or digital media by ID and returns a 204 status code if successful.
