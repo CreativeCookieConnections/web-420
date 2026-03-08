@@ -10,8 +10,36 @@ const bcrypt = require('bcryptjs');
 const createError = require('http-errors');
 const { type } = require('os');
 const users = require("../database/users");
+const Ajv = require("ajv");
+const ajv = new Ajv();
 
 const app = express(); // Creates an express application
+
+const defaultSecurityQuestions = [
+    { answer: "Hedwig" },
+    { answer: "Quidditch Through the Ages" },
+    { answer: "Evans" }
+];
+
+const securityQuestionsSchema = {
+    type: "object",
+    properties: {
+        newPassword: { type: "string" },
+        securityQuestions: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    answer: { type: "string" }
+                },
+                required: ["answer"],
+                additionalProperties: false
+            }
+        }
+    },
+    required: ["newPassword", "securityQuestions"],
+    additionalProperties: false
+};
 
 app.use(express.json()); // Middleware to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
@@ -99,7 +127,8 @@ app.post("/api/register", async (req, res, next) => {
 
         const user = await users.insertOne({
             email: email,
-            password: hashedPassword
+            password: hashedPassword,
+            securityQuestions: defaultSecurityQuestions
         });
 
         res.status(200).send({ user: user, message: "Registration successful" }); // Send response with user information and success message
@@ -183,6 +212,54 @@ app.delete("/api/recipes/:id", async (req, res, next) => {
             return next(createError(404, "Recipe not found")); // Send 404 error if recipe is not found
         }
 
+        console.error("Error:", err.message); // Logs error message
+        next(err); // Passes error to the next middleware
+    }
+});
+
+// Create a new POST endpoint. Add a try-catch block for unexpected errors, update the user's password, and return 200 status code with a message of "Password reset successful" message.
+app.post("/api/users/:email/reset-password", async (req, res, next) => {
+    try {
+        const { email } = req.params; // Get email from request parameters
+        const { newPassword, securityQuestions } =req.body; // Get new password and security questions from request body
+
+        const validate = ajv.compile(securityQuestionsSchema); // Compile the AJV schema
+        const valid = validate(req.body); // Validate the request body against the schema
+
+        if (!valid) {
+            console.error("Bad Request: Invalid request body", validate.errors); // Log error for invalid request body
+            return next(createError(400, "Bad Request")); // Send 400 error for invalid request body
+        }
+
+        let user;
+        try {
+            user = await users.findOne({ email: email }); // Find user by email
+        } catch (err) {
+            console.error("Unauthorized: User not found");
+            return next(createError(401, "Unauthorized"));
+        }
+
+        if (!Array.isArray(securityQuestions) || securityQuestions.length < 3 ||
+            !Array.isArray(user.securityQuestions) || user.securityQuestions.length < 3) {
+            console.error("Unauthorized: Security questions do not match");
+            return next(createError(401, "Unauthorized"));
+        }
+
+        if (securityQuestions[0].answer !== user.securityQuestions[0].answer ||
+            securityQuestions[1].answer !== user.securityQuestions[1].answer ||
+            securityQuestions[2].answer !== user.securityQuestions[2].answer) {
+                console.error("Unauthorized: Security questions do not match"); // Log error for unauthorized access
+                return next(createError(401, "Unauthorized")); // Send 401 error for unauthorized access
+        }
+
+        const hashedPassword = bcrypt.hashSync(newPassword, 10); // Hash the new password using bcrypt with 10 salt rounds
+        user.password = hashedPassword; // Update user's password with the hashed new password
+
+        const result = await users.updateOne({ email: email }, {user}); // Update the user in the database
+        
+        console.log("Result:", result); // Log the result of the update
+        res.status(200).send({ message: "Password reset successful", user: user }); // Send response with success message and updated user information
+    } catch (err) {
         console.error("Error:", err.message); // Logs error message
         next(err); // Passes error to the next middleware
     }

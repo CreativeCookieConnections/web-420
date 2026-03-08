@@ -69,6 +69,37 @@ describe("Chapter 3: API Tests", () => {
     expect(res.body.message).toEqual("Registration successful");
     });
 
+  // Chapter 7: Unit Tests
+
+  // Add a unit test to check if a 200 status code is returned with a message of "Password reset successful" when resetting a password.
+  it("should return a 200 status code with a message of 'Password reset successful' when resetting a user's password", async() => {
+    const res = await request(app).post("/api/users/cedric@hogwarts.edu/reset-password").send({
+      securityQuestions: [
+        {answer: "Hedwig"},
+        {answer: "Quidditch Through the Ages"},
+        {answer: "Evans"}
+      ],
+      newPassword: "newpassword"
+    });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toEqual("Password reset successful");
+  });
+
+  // Add a unit test that checks if a 400 status code with a message of "Bad Request" is returned when the request body fails ajv validation
+  it("should return a 400 status code with a message of 'Bad Request' when the request body fails ajv validation", async () => {
+    const res = await request(app).post("/api/users/harry@hogwarts.edu/reset-password").send({
+      securityQuestions: [
+        {answer: "Hedwig", question: "What is your pet's name?"},
+        {answer: "Quidditch Through the Ages", myName: "Harry Potter"}
+      ],
+      newPassword: "password"
+    });
+
+    expect(res.statusCode).toEqual(400);
+    expect(res.body.message).toEqual("Bad Request");
+  });
+
   // Add a new unit test to check if a 409 status code is returned with the message "Conflict" when registering a user with a duplicate email address
   it("should return a 409 status code with a message of 'Conflict' when registering a user with a duplicate email", async () => {
     const res = await request(app).post("/api/register").send({
@@ -78,6 +109,21 @@ describe("Chapter 3: API Tests", () => {
 
     expect(res.statusCode).toEqual(409);
     expect(res.body.message).toEqual("Conflict");
+  });
+
+  // Add a new unit test to this chapter's test suite that checks if a 401 error is returned with a message of "Unauthorized" when the security answers are incorrect.
+  it("should return a 401 status code with a message of 'Unauthorized' when the security answers are incorrect", async() => {
+    const res = await request(app).post("/api/users/harry@hogwarts.edu/reset-password").send({
+      securityQuestions: [
+        {answer: "Fluffy"},
+        {answer: "Quidditch Through the Ages"},
+        {answer: "Evans"}
+      ],
+      newPassword: "newpassword"
+    });
+
+    expect(res.statusCode).toEqual(401);
+    expect(res.body.message).toEqual("Unauthorized");
   });
 
   // Add a unit test to check if a status code of 400 is returned with a message of "Bad Request" when using too many or too few parameter values
